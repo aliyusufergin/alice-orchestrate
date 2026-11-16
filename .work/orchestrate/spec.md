@@ -51,8 +51,8 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
    - Geriye `codex` süreci (`ps`), worktree veya dal kalmaz.
 5. **Yayına hazırlık:**
    - README kurulumu, Codex girişini ve neyin ne zaman Codex'e gittiğini anlatır.
-   - README asgari Codex sürümünü ve Route 1'deki denemede kullanılan tam sürümü yazar.
-   - Sürüm yerelde etiketlenir. GitHub'a gönderim kullanıcının onayıyla olur (Route 3).
+   - README asgari Codex sürümünü ve uçtan uca denemede kullanılan tam sürümü yazar.
+   - Sürüm yerelde etiketlenir. GitHub'a gönderim kullanıcının onayıyla olur (Route 2).
 
 ## Assumptions
 - **Biçim ve dil:** Plugin alice-skills 0.3.6'dan çatallanan bağımsız bir kopya. Adı geçici olarak `alice-orchestrate`. Skill metinleri İngilizce, lisans MIT.
@@ -68,8 +68,7 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 - **Sürüm ve referans:** Hedef sürüm `codex-cli` ≥ 0.159. `codex-plugin-cc`'den (Apache-2.0) alınan bir şey olursa kaynak belirtilir.
 
 ## Route
-1. **MILESTONE:** örnek bir proje üzerinde uçtan uca deneme. Done means 2–4 burada gözlenir.
-2. **README**, sürüm etiketi.
-3. **MILESTONE:** GitHub'a yayın. Geri alması zor olduğu için kullanıcının onayıyla.
+1. **README**, sürüm etiketi.
+2. **MILESTONE:** GitHub'a yayın. Geri alması zor olduğu için kullanıcının onayıyla.
 
 Bilinmeyenler: `--output-schema`'nın inceleme çıktısında ne kadar güvenilir olduğu; kota dolmasının exec'te tam olarak nasıl göründüğü (şimdilik "usage limit" metniyle tespit ediliyor).

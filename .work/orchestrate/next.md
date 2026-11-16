@@ -1,16 +1,10 @@
 ## Facts
-- The launcher `bin/alice-codex` is done and tested; see `done.md` and the header of the script. Under `--plugin-dir` it is on the Bash PATH.
-- The skills now use workers:
-  - `step` has a Workers section. The independent check uses a worker when one is available, and a well-defined part can go to a worker as a `work` job; its `changes.patch` is reviewed and applied with `git apply`.
-  - `survey` can share its reading with a worker.
-  - `ask-alice` explains workers to the user.
-  - About 18 lines were added in total; `git diff d6d29f5 -- skills/` shows them.
-- No end-to-end run of the skills themselves has happened yet. Only the launcher has been tested.
+- The end-to-end milestone is done; see `done.md` and `journal.md`. The trial scripts are in the session scratchpad and will not last: `e2e/mk.sh` builds the sample project, `e2e/run.sh <scenario>` runs a headless step. Rebuild them from this description if needed.
+- Done means 2–4 were observed, with one gap waiting for the user's decision. Done 2 in its literal form ("Codex finds the planted bug") was not seen, because Claude found the planted bug first in both runs. What was seen instead: Codex found a different bug that Claude had missed, it was labelled "Codex", and it went into the journal.
+- Codex 0.159.2 was used throughout.
 
 ## Proposal
-MILESTONE (Route 1): an end-to-end trial on a sample git project with a planted bug, observing done means 2–4.
-- A real `/step` should send its independent check to Codex, catch the bug, and record it in the journal with a "Codex" label.
-- A delegated sub-task should come back as a patch that Claude applies.
-- The fallback cases should end with Claude alone: no codex on PATH, a stub that fails, a timeout and a quota error. Nothing may be left behind.
-
-The user may prefer to run this interactively with `claude --plugin-dir <this repo>`. Otherwise run it headless with `claude -p` and report what was observed.
+Route 1: README and version tag.
+- Install the plugin through a local marketplace (`/plugin marketplace add <path>`) to check done means 1, and confirm that `bin/` is on PATH for an installed plugin (Codex's review claimed it is not).
+- In the README cover: setup, Codex login, when work goes to Codex, the minimum and the tested Codex version, and that the plugin is not to be installed alongside alice-skills.
+- Tag v0.1.0 locally. Publishing to GitHub waits for the user.
