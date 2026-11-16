@@ -56,17 +56,50 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 ## Assumptions
 - **Biçim ve dil:** Plugin alice-skills 0.3.6'dan çatallanan bağımsız bir kopya. Adı geçici olarak `alice-orchestrate`. Skill metinleri İngilizce, lisans MIT.
 - **Kayıt uyumu:** `.work/` kayıt biçimi alice-skills ile aynı kalır, böylece bir proje ikisi arasında geçebilir.
-- **Ne zaman Codex:**
-  - `step`'in bağımsız kontrolü alice'teki sıklıkta çalışır: milestone'larda, sonda ve riskli adımlarda. Çalıştığında, Codex varsa Codex yapar. Her adımda çalışmaz, çünkü kotayı eritir.
-  - Claude, sonucu değiştirecek bir kararda Codex'ten ikinci görüş isteyebilir.
-  - `survey` okumaları (kaynaklar ve kod) Codex ile bölüşülebilir.
-  - `step` içinde iyi tanımlı alt işler Codex'e devredilebilir.
-  - `clarify`, `spec` ve `steer` Claude'da kalır, çünkü bunlar kullanıcıyla konuşma gerektirir.
+- **Ne zaman Codex** (bkz. `survey-orchestration.md`):
+  - **İnceleyici seçimi:** Kodu kim yazdıysa inceleyici diğeridir.
+    - Codex'in yazdığını yeni bir Claude subagent'ı inceler.
+    - Claude'un yazdığını Codex inceler; Codex yoksa Claude subagent'ı.
+    - Milestone'larda ve sonda ikisi bağımsız inceler.
+    - Küçük diff'lerde Codex'e gidilmez.
+  - **İnceleme kuralları:**
+    - İnceleyici yalnızca spec'i, diff'i ve repoyu görür; yazarın gerekçesini görmez.
+    - Doğruluk açıklarını ve veri kaybını raporlar, kod yazmaz.
+    - Her bulgu kanıtla gelir. Claude her bulguyu çalıştırarak doğrular, tartışmaz.
+    - En fazla 2 tur yapılır; uzlaşma olmazsa kullanıcıya söylenir. Otomatik inceleme kapısı yok.
+  - **İkinci görüş:** Claude, sonucu değiştirecek bir kararda Codex'ten ikinci görüş isteyebilir. `survey` okumaları da Codex ile bölüşülebilir.
+  - **Devretme:** Codex'in asıl rolü inceleme ve ikinci görüştür; iş devretmek istisnadır. Bir iş ancak dört şartla devredilir:
+    - kendi içinde bütün,
+    - bir komutla doğrulanabilir,
+    - dosyaları başka işle çakışmıyor,
+    - devretmeye değecek kadar büyük.
+
+    Varsayılan tek worker. Brief'te şu alanlar olur:
+    - amaç ve neden,
+    - verilmiş kararlar,
+    - kapsam ve yasak dosyalar,
+    - "bitti" komutu,
+    - testlere dokunmama,
+    - "yanlış görünüyorsa dur, raporla" çıkışı.
+  - **Launcher korumaları:** `work` işi `changed.txt` ve `flags.txt` yazar; test, CI veya kapsam dışı dosyalara dokunulduysa bunlar işaretlenir. "Bitti" komutunu Claude, patch'i uyguladıktan sonra kendi ağacında çalıştırır.
+  - **Ölçüm:** Her worker işi journal'a tek satır düşer: tür, sonuç, kabul/ret.
+  - **Claude'da kalanlar:** `clarify`, `spec` ve `steer` Claude'da kalır, çünkü bunlar kullanıcıyla konuşma gerektirir.
 - **Model seçimi:** Skill'ler kullanıcının seçtiği Claude modelini değiştirmez. README en üst modeli önerir.
 - **Başlatma:** Codex işleri Claude Code'un arka plan Bash'i ile başlatılır. Betiğin görevleri: stdin'i kapatmak, zaman aşımı uygulamak, süreç grubunu öldürmek, sonucu dosyaya yazmak. Zaman aşımı varsayılan olarak 15 dakika ve ayarlanabilir.
 - **Sürüm ve referans:** Hedef sürüm `codex-cli` ≥ 0.159. `codex-plugin-cc`'den (Apache-2.0) alınan bir şey olursa kaynak belirtilir.
 
 ## Route
-Tamamlandı (bkz. `done.md`).
+1. **Launcher:** `work` işi `changed.txt` ve `flags.txt` yazar; brief'teki kapsam varsa ona göre işaretler. Sahte Codex ile test edilir.
+2. **Skill metinleri:**
+   - `step`: inceleyici seçimi, inceleme kuralları, devretme şartları, brief alanları, journal satırı.
+   - `ask-alice` ve README güncellenir.
+   - "Farklı model farklı şeyleri kaçırır" iddiası yumuşatılır.
+3. **MILESTONE:** Headless uçtan uca deneme. Gözlenecekler:
+   - Claude'un yazdığı diff'i Codex inceliyor mu?
+   - Milestone'da iki inceleyici çalışıyor mu?
+   - Bulgular doğrulanıyor mu?
+   - Geri düşme hâlâ çalışıyor mu?
+
+   Ardından bağımsız kontrol ve 0.2.0 yayını.
 
 Bilinmeyenler: `--output-schema`'nın inceleme çıktısında ne kadar güvenilir olduğu (kullanılmadı); kota dolmasının exec'te gerçekte nasıl göründüğü (şimdilik "usage limit" metniyle tespit ediliyor).
