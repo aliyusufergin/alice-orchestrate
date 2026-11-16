@@ -63,7 +63,7 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
     - Milestone'larda ve sonda ikisi bağımsız inceler.
     - Küçük diff'lerde Codex'e gidilmez.
   - **İnceleme kuralları:**
-    - İnceleyici yalnızca spec'i, diff'i ve repoyu görür; yazarın gerekçesini görmez.
+    - İnceleyiciye yalnızca spec ve diff verilir; journal'ı, `next.md`'yi ve commit mesajlarını okumaması söylenir. Okuma yasağını teknik olarak zorlayan bir şey yok.
     - Doğruluk açıklarını ve veri kaybını raporlar, kod yazmaz.
     - Her bulgu kanıtla gelir. Claude her bulguyu çalıştırarak doğrular, tartışmaz.
     - En fazla 2 tur yapılır; uzlaşma olmazsa kullanıcıya söylenir. Otomatik inceleme kapısı yok.
@@ -89,12 +89,6 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 - **Sürüm ve referans:** Hedef sürüm `codex-cli` ≥ 0.159. `codex-plugin-cc`'den (Apache-2.0) alınan bir şey olursa kaynak belirtilir.
 
 ## Route
-1. **MILESTONE:** Headless uçtan uca deneme. Gözlenecekler:
-   - Claude'un yazdığı diff'i Codex inceliyor mu?
-   - Milestone'da iki inceleyici çalışıyor mu?
-   - Bulgular doğrulanıyor mu?
-   - Geri düşme hâlâ çalışıyor mu?
-
-   Ardından bağımsız kontrol ve 0.2.0 yayını.
+Tamamlandı (bkz. `done.md`).
 
 Bilinmeyenler: `--output-schema`'nın inceleme çıktısında ne kadar güvenilir olduğu (kullanılmadı); kota dolmasının exec'te gerçekte nasıl göründüğü (şimdilik "usage limit" metniyle tespit ediliyor).

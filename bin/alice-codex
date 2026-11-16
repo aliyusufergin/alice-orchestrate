@@ -7,7 +7,7 @@
 #                                             git worktree, leaves <job-dir>/changes.patch
 #
 # For work, an optional <job-dir>/scope.txt lists the paths the task may change, one per line
-# (globs like src/*.py, or directories ending in /). changed.txt lists changed paths with git's
+# (globs like src/*.py, matching one directory level, or directories ending in / for everything below). changed.txt lists changed paths with git's
 # status letter; flags.txt lists changes to look at closely: tests, CI, and paths outside scope.
 #
 # Results in <job-dir>: result.md (Codex's final message), status (ok|unavailable|failed|timeout|quota),
@@ -57,9 +57,10 @@ kill_tree() { # pid signal
   kill "-$2" "$1" 2>/dev/null
 }
 
-stop_codex() {
+stop_codex() { # Codex runs as its own process group; stop the group and anything it spawned
   [ -n "$CODEX_PID" ] || return 0
-  kill_tree "$CODEX_PID" TERM; sleep 1; kill_tree "$CODEX_PID" KILL
+  kill -TERM -- "-$CODEX_PID" 2>/dev/null; kill_tree "$CODEX_PID" TERM; sleep 1
+  kill -KILL -- "-$CODEX_PID" 2>/dev/null; kill_tree "$CODEX_PID" KILL
   wait "$CODEX_PID" 2>/dev/null; CODEX_PID=""
 }
 
@@ -98,14 +99,17 @@ run_codex() { # cwd sandbox; returns codex's exit code, 124 on timeout
   local args=(exec --json --ephemeral --color never -s "$2" -C "$1" -o "$JOB/result.md") waited=0 rc
   [ -n "${ALICE_CODEX_MODEL:-}" ] && args+=(-m "$ALICE_CODEX_MODEL")
   git -C "$1" rev-parse --git-dir >/dev/null 2>&1 || args+=(--skip-git-repo-check)
+  set -m
   codex "${args[@]}" - < "$JOB/prompt.md" > "$JOB/events.jsonl" 2> "$JOB/stderr.log" &
   CODEX_PID=$!
+  set +m
   [ -n "$TMP" ] && echo "$CODEX_PID" > "$TMP/codex.pid"
   while kill -0 "$CODEX_PID" 2>/dev/null; do
     [ "$waited" -ge "$TIMEOUT" ] && { stop_codex; return 124; }
     sleep 1; waited=$((waited + 1))
   done
-  wait "$CODEX_PID"; rc=$?; CODEX_PID=""
+  wait "$CODEX_PID"; rc=$?
+  kill -KILL -- "-$CODEX_PID" 2>/dev/null; CODEX_PID=""   # helpers it left running
   return "$rc"
 }
 
@@ -128,7 +132,9 @@ in_scope() { # path; true when there is no scope.txt or a line matches
   local pat
   while IFS= read -r pat || [ -n "$pat" ]; do
     [ -n "$pat" ] || continue
-    case "$pat" in */) case "$1" in "$pat"*) return 0 ;; esac ;; esac
+    case "$pat" in */) case "$1" in "$pat"*) return 0 ;; esac; continue ;; esac
+    # a glob matches within its own directory level: * never crosses /
+    [ "${1//[!\/]/}" = "${pat//[!\/]/}" ] || continue
     # shellcheck disable=SC2254
     case "$1" in $pat) return 0 ;; esac
   done < "$JOB/scope.txt"
@@ -188,6 +194,7 @@ run_codex "$WT" workspace-write; classify $?
 if ! { git -C "$WT" add -A && git -C "$WT" diff --cached --binary "$BASE" -- . ':(exclude).work' > "$JOB/changes.patch"; }; then
   finish failed 4 "cannot collect changes"
 fi
-git -C "$WT" diff --cached --name-status --no-renames "$BASE" -- . ':(exclude).work' > "$JOB/changed.txt"
+git -C "$WT" diff --cached -z --name-status --no-renames "$BASE" -- . ':(exclude).work' \
+  | while IFS= read -r -d '' st && IFS= read -r -d '' path; do printf '%s\t%s\n' "$st" "$path"; done > "$JOB/changed.txt"
 flag_changes < "$JOB/changed.txt" > "$JOB/flags.txt"
 finish ok 0 ""

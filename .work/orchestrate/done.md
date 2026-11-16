@@ -7,3 +7,4 @@
 - Final check by Codex: availability checks now bounded (20s); README's cleanup claim matched to behaviour. v0.1.1.
 - 0.2.0 launcher: `work` also writes `changed.txt` and `flags.txt` (test, ci, out-of-scope via optional `scope.txt`, deleted); stub-tested incl. paths with spaces.
 - 0.2.0 skills: reviewer chosen by author, both reviewers at milestones/end, review rules (blind to reasoning, evidence, verify by running, ≤2 rounds), gated delegation, brief fields, journal line per job; ask-alice and README updated.
+- 0.2.0 milestone: e2e (real, larger task, missing, quota) observed; two-reviewer check run, 7 distinct findings fixed (quoting, process group, glob depth, isolation wording, subagent review of worker code, Codex label, milestone rule).
