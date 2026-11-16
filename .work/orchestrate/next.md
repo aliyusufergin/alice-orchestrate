@@ -1,10 +1,6 @@
 ## Facts
-- The end-to-end milestone is done; see `done.md` and `journal.md`. The trial scripts are in the session scratchpad and will not last: `e2e/mk.sh` builds the sample project, `e2e/run.sh <scenario>` runs a headless step. Rebuild them from this description if needed.
-- Done means 2–4 were observed, with one gap waiting for the user's decision. Done 2 in its literal form ("Codex finds the planted bug") was not seen, because Claude found the planted bug first in both runs. What was seen instead: Codex found a different bug that Claude had missed, it was labelled "Codex", and it went into the journal.
-- Codex 0.159.2 was used throughout.
+- v0.1.0 is tagged locally. Done means 1 (install), 2–4 (e2e) and 5 (README, tag) are all observed; see `done.md`.
+- What is left is publishing, which needs the user's approval: a GitHub repo `aliyusufergin/alice-orchestrate` (it does not exist yet, as far as we know) and a push of `main` with tags. The README's install line assumes that repo name.
 
 ## Proposal
-Route 1: README and version tag.
-- Install the plugin through a local marketplace (`/plugin marketplace add <path>`) to check done means 1, and confirm that `bin/` is on PATH for an installed plugin (Codex's review claimed it is not).
-- In the README cover: setup, Codex login, when work goes to Codex, the minimum and the tested Codex version, and that the plugin is not to be installed alongside alice-skills.
-- Tag v0.1.0 locally. Publishing to GitHub waits for the user.
+Route 1 (MILESTONE): once the user approves, create the repo and push. Then run the final independent check and close the work: remove `next.md` and report.

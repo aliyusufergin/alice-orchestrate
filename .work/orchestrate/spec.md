@@ -33,9 +33,8 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 2–4 numaralı maddeler gerçek `codex` ve örnek bir git projesi üzerinde gözlenir:
 
 2. **Bağımsız kontrol:**
-   - Örnek projeye bilinen bir hata yerleştirilir.
    - `/step`'in bağımsız kontrolü Codex'e gider.
-   - Codex'in bu hatayı bulduğu adım raporunda "Codex" etiketiyle görünür ve journal'da düz bir satır olarak yer alır (yeni alan yok).
+   - Codex'in bulduğu ve Claude'un kaçırdığı bir sorun adım raporunda "Codex" etiketiyle görünür ve journal'da düz bir satır olarak yer alır (yeni alan yok).
 3. **Devredilen iş:**
    - Claude'un devrettiği bir alt iş Codex tarafından ayrı bir worktree'de yapılır.
    - Claude alana kadar ana ağaç değişmez.
@@ -52,7 +51,7 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 5. **Yayına hazırlık:**
    - README kurulumu, Codex girişini ve neyin ne zaman Codex'e gittiğini anlatır.
    - README asgari Codex sürümünü ve uçtan uca denemede kullanılan tam sürümü yazar.
-   - Sürüm yerelde etiketlenir. GitHub'a gönderim kullanıcının onayıyla olur (Route 2).
+   - Sürüm yerelde etiketlenir. GitHub'a gönderim kullanıcının onayıyla olur (Route 1).
 
 ## Assumptions
 - **Biçim ve dil:** Plugin alice-skills 0.3.6'dan çatallanan bağımsız bir kopya. Adı geçici olarak `alice-orchestrate`. Skill metinleri İngilizce, lisans MIT.
@@ -68,7 +67,6 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 - **Sürüm ve referans:** Hedef sürüm `codex-cli` ≥ 0.159. `codex-plugin-cc`'den (Apache-2.0) alınan bir şey olursa kaynak belirtilir.
 
 ## Route
-1. **README**, sürüm etiketi.
-2. **MILESTONE:** GitHub'a yayın. Geri alması zor olduğu için kullanıcının onayıyla.
+1. **MILESTONE:** GitHub'a yayın. Geri alması zor olduğu için kullanıcının onayıyla.
 
 Bilinmeyenler: `--output-schema`'nın inceleme çıktısında ne kadar güvenilir olduğu; kota dolmasının exec'te tam olarak nasıl göründüğü (şimdilik "usage limit" metniyle tespit ediliyor).
