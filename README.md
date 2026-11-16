@@ -39,7 +39,7 @@ Claude stays in charge of the work and its record. When Codex is installed and l
 
 Every job uses your ChatGPT plan's limits, so Claude uses Codex where a second model adds something, not on every step. If Codex is missing, not logged in, fails, times out (15 minutes by default) or is out of quota, Claude does the work itself and tells you why. Everything works without Codex.
 
-Claude reaches Codex through `bin/alice-codex`, which runs `codex exec` read-only for reviews and in a temporary worktree for work, and leaves no worktree or process behind. Run it without arguments for its interface. The timeout is set with `ALICE_CODEX_TIMEOUT` (in seconds) and the model with `ALICE_CODEX_MODEL`.
+Claude reaches Codex through `bin/alice-codex`, which runs `codex exec` read-only for reviews and in a temporary worktree for work, and removes its worktree and stops Codex when the job ends, fails, times out or is interrupted. If the launcher itself is killed outright, the next delegated job in that repository cleans up what it left. Run it without arguments for its interface. The timeout is set with `ALICE_CODEX_TIMEOUT` (in seconds) and the model with `ALICE_CODEX_MODEL`.
 
 The skills do not change your Claude model. Use the strongest one available as the orchestrator.
 

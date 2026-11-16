@@ -3,3 +3,5 @@
 - Skills wired: `step` (Workers section; independent check prefers a worker; delegation via patch), `survey` (worker can share reading), `ask-alice` (explains workers). `bin/` confirmed on Bash PATH under `--plugin-dir`.
 - MILESTONE e2e (headless `claude -p --plugin-dir`, 6 sample projects): real Codex did delegated median (patch applied) and milestone reviews; missing/fail/timeout/quota each fell back to Claude + fresh subagent, told the user, journaled; nothing left behind. Done 2 literal (Codex finds the planted bug) not observed — Claude found it first both times.
 - Install check: local marketplace + `--scope local` install lists the skills and puts `bin/` on PATH; test install and marketplace removed afterwards. README covers workers, requirements (codex ≥ 0.159, tested 0.159.2), install and not-both rule. Tagged v0.1.0.
+- Published: public repo aliyusufergin/alice-orchestrate, v0.1.0; install from GitHub verified (skills listed, `bin/` on PATH), test install removed.
+- Final check by Codex: availability checks now bounded (20s); README's cleanup claim matched to behaviour. v0.1.1.

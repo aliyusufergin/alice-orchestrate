@@ -8,7 +8,8 @@
 #
 # Results in <job-dir>: result.md (Codex's final message), status (ok|unavailable|failed|timeout|quota),
 # events.jsonl, stderr.log; for work also base (commit the patch is against; uncommitted tracked
-# changes included, untracked files not). The worktree and every Codex process are gone on return.
+# changes included, untracked files not). The worktree and every Codex process are gone on return,
+# unless the launcher itself is killed outright; the next `work` run in that repository cleans up then.
 # Exit codes: 0 ok, 2 usage, 3 unavailable, 4 failed or quota, 5 timeout.
 # Timeout: ALICE_CODEX_TIMEOUT seconds (default 900). Model: ALICE_CODEX_MODEL (default: Codex's own).
 
@@ -24,14 +25,26 @@ version_ge() { # a b: is a >= b
     for (i = 1; i <= 3; i++) { if (x[i] + 0 > y[i] + 0) exit 0; if (x[i] + 0 < y[i] + 0) exit 1 } exit 0 }'
 }
 
+bounded() { # seconds command...: run a short command, killing it if it outlives the limit
+  local limit=$(( $1 * 2 )) p; shift
+  "$@" & p=$!
+  while kill -0 "$p" 2>/dev/null; do
+    [ "$limit" -le 0 ] && { kill_tree "$p" KILL; wait "$p" 2>/dev/null; return 124; }
+    sleep 0.5; limit=$((limit - 1))
+  done
+  wait "$p"
+}
+
 # Prints why Codex can't be used, or nothing if it can.
 unavailable_reason() {
   command -v codex >/dev/null 2>&1 || { echo "codex is not installed"; return; }
   local v
-  v="$(codex --version 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
+  v="$(bounded 20 codex --version 2>/dev/null </dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
   [ -n "$v" ] || { echo "cannot read codex version"; return; }
   version_ge "$v" "$MIN_VERSION" || { echo "codex $v is older than $MIN_VERSION"; return; }
-  codex login status </dev/null >/dev/null 2>&1 || { echo "codex is not logged in (run: codex login)"; return; }
+  bounded 20 codex login status </dev/null >/dev/null 2>&1; case $? in
+    0) ;; 124) echo "codex login status did not respond" ;; *) echo "codex is not logged in (run: codex login)" ;;
+  esac
 }
 
 kill_tree() { # pid signal

@@ -6,7 +6,7 @@
 - Google (Gemini CLI, Antigravity): third-party orchestration on a consumer login is not permitted. Use only an API key or Vertex.
 - Other vendors (Copilot, Cursor, Vibe, Qwen, Grok) officially ship ACP servers. That is the path for adding them later.
 - Launcher: `bin/alice-codex` (on Bash PATH when the plugin is installed). Job dirs must be outside `/tmp`/`$TMPDIR` and the worktree, since Codex's workspace-write sandbox may write there; `<repo>/.git/alice-codex/<job>` is a safe place.
-- Testing: a stub `codex` on PATH (handles `--version`, `login status`, `exec ... -o FILE -C DIR -`) exercises every failure mode without quota. Never `pkill -f` a pattern in the test shell's own command line.
+- Testing: a stub `codex` on PATH (handles `--version`, `login status`, `exec ... -o FILE -C DIR -`) exercises every failure mode without quota. End-to-end: headless `claude -p "/alice-orchestrate:step ..." --plugin-dir <repo> --settings '{"enabledPlugins":{"alice-skills@alice-skills":false}}'` on a sample project with a spec and a planted bug, one run per scenario (real, missing, fail, hang, quota). Never `pkill -f` a pattern in the test shell's own command line.
 
 ## Claude Code
 - Background Bash (`run_in_background`) notifies on exit, so it serves as a job queue without an MCP server.

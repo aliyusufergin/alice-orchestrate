@@ -67,6 +67,6 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 - **Sürüm ve referans:** Hedef sürüm `codex-cli` ≥ 0.159. `codex-plugin-cc`'den (Apache-2.0) alınan bir şey olursa kaynak belirtilir.
 
 ## Route
-1. **MILESTONE:** GitHub'a yayın. Geri alması zor olduğu için kullanıcının onayıyla.
+Tamamlandı (bkz. `done.md`).
 
-Bilinmeyenler: `--output-schema`'nın inceleme çıktısında ne kadar güvenilir olduğu; kota dolmasının exec'te tam olarak nasıl göründüğü (şimdilik "usage limit" metniyle tespit ediliyor).
+Bilinmeyenler: `--output-schema`'nın inceleme çıktısında ne kadar güvenilir olduğu (kullanılmadı); kota dolmasının exec'te gerçekte nasıl göründüğü (şimdilik "usage limit" metniyle tespit ediliyor).
