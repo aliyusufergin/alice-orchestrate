@@ -28,3 +28,7 @@ Say what a skill will do for them, in their words rather than these names. For e
 - `/spec`: "writes a one-page plan that later sessions read, so you never have to explain this again". Tell them to type `/spec` to start it.
 - `/step`: "picks up where we left off". In a new session they can type `/step` or just say to continue.
 - `/steer`: they never need to name it; telling you what changed is enough.
+
+## Workers
+
+Claude stays in charge of the work and the record. When OpenAI Codex is installed and logged in, Claude can hand it the independent check, a second opinion, or a well-defined part of a step, through `alice-codex`. A worker never changes the user's files or the record directly; Claude reviews and applies what it returns. Each job uses the user's ChatGPT plan, so Claude uses workers where a second model adds something, not on every step. Without Codex, everything works with Claude alone. Tell the user plainly when a worker was used, and when it could not be.

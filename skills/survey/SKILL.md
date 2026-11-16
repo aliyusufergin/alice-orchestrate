@@ -5,7 +5,7 @@ description: Survey how others have solved this problem and its neighbours befor
 
 Learn what should change the plan before anyone commits to it, including whether this needs making at all.
 
-Look wider than an exact match: existing tools, adjacent problems whose solutions transfer, known failures, current practice, and what the project already has. Favour primary sources, and keep what a source shows apart from what you infer. Delegate the reading to subagents so this session stays light.
+Look wider than an exact match: existing tools, adjacent problems whose solutions transfer, known failures, current practice, and what the project already has. Favour primary sources, and keep what a source shows apart from what you infer. Delegate the reading to subagents so this session stays light. When `alice-codex` is available, a worker can take part of the reading as a `review` job; treat what it returns as a source to check, and read on without it if the job does not end `ok`.
 
 Stop when further reading would no longer change your recommendation.
 
