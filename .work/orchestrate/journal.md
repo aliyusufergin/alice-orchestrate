@@ -1,1 +1,5 @@
 - 2026-11-16: Fork baseline commit keeps skill bodies byte-identical to alice-skills 0.3.6, so `git diff <baseline>` shows exactly what orchestration added.
+- 2026-11-16: Launcher creates its own detached worktree (not `codex exec --worktree`) so cleanup is under our control and no branch is ever created. Base is `git stash create` so uncommitted tracked changes are included; untracked files are not.
+- 2026-11-16: Patch excludes `.work/` so a worker can never write the record, even if committed.
+- 2026-11-16: Quota is detected only from stderr and `error`/`turn.failed` events matching "usage limit"/"usageLimitExceeded"; the real wording is unobserved (no exhausted account to test). Misclassification only changes the message, the fallback is the same.
+- 2026-11-16: Known gaps left open: `codex login status` has no timeout; a killed-outright launcher's orphaned Codex keeps running until the next `work` run sweeps it.

@@ -1,7 +1,10 @@
 ## Facts
-- The plugin skeleton exists: `alice-orchestrate` 0.1.0, forked from alice-skills 0.3.6. The skills and hooks are byte-identical to the source; only `.claude-plugin/*.json` and the README title and install lines were changed. `claude plugin validate .` passes, with one warning about a missing icon. The scale is still tiny, as the spec intends.
-- The baseline commit is on `main`. `git diff <baseline>..` shows everything added since.
-- Codex 0.159.2 is logged in with ChatGPT. Its flags are listed in `.work/knowledge.md`.
+- `bin/alice-codex` (about 150 lines of bash) provides three commands: `check`, `review <job> [repo]` (read-only) and `work <job> <repo>` (detached temporary worktree, produces `changes.patch`).
+  - Every job writes `status` (ok, unavailable, failed, timeout or quota) and uses exit codes 0, 3, 4 and 5. Usage is documented in the script header.
+  - It was tested with a stub codex in every failure mode and with real Codex 0.159.2: a review found a planted bug in 15 s, and a work run returned a patch that applies in about 25 s. No worktree, branch or process was left behind. Re-run the stub tests after changing the script; see `.work/knowledge.md`.
+- Skills are still byte-identical to alice-skills 0.3.6. Nothing calls the launcher yet.
+- It is unverified that `bin/` lands on the Bash PATH once the plugin is installed. Check that before skills rely on it, with `ls` or `${CLAUDE_PLUGIN_ROOT}` as the fallback.
+- Job directories must not be in `/tmp`, because Codex can write there. Use `<repo>/.git/alice-codex/<job>`.
 
 ## Proposal
-Route item 1: build the Codex launcher, with a read-only review mode and a write mode that runs in a worktree. It needs a timeout, cleanup of processes and worktrees, and detection of when no worker is available. Exercise it against real Codex in a throwaway git repo (for example under the scratchpad), including the failure cases from "done means" item 4. Find out what an exhausted quota looks like in exec output, or record that it can't be observed and how it will be simulated. This is the riskiest piece, so run the independent check.
+Route item 1: wire the worker into `step` (the independent check goes to Codex when available; well-defined sub-tasks can be delegated, and their patch is reviewed and applied by Claude), `survey` (reading can be shared) and `ask-alice` (explain the workers). Fallback and telling the user must follow the spec's commitments. Keep the additions as short as the rest of the skills; the skill text should say what good looks like and leave the how to the model.

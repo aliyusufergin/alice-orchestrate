@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Run OpenAI Codex as a worker through its official non-interactive CLI (`codex exec`).
+#
+#   alice-codex check
+#   alice-codex review <job-dir> [repo-dir]   prompt in <job-dir>/prompt.md; read-only sandbox
+#   alice-codex work   <job-dir> <repo-dir>   prompt in <job-dir>/prompt.md; runs in a temporary
+#                                             git worktree, leaves <job-dir>/changes.patch
+#
+# Results in <job-dir>: result.md (Codex's final message), status (ok|unavailable|failed|timeout|quota),
+# events.jsonl, stderr.log; for work also base (commit the patch is against; uncommitted tracked
+# changes included, untracked files not). The worktree and every Codex process are gone on return.
+# Exit codes: 0 ok, 2 usage, 3 unavailable, 4 failed or quota, 5 timeout.
+# Timeout: ALICE_CODEX_TIMEOUT seconds (default 900). Model: ALICE_CODEX_MODEL (default: Codex's own).
+
+set -u
+MIN_VERSION="0.159.0"
+TIMEOUT="${ALICE_CODEX_TIMEOUT:-900}"
+JOB="" REPO="" TMP="" WT="" CODEX_PID=""
+
+usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+
+version_ge() { # a b: is a >= b
+  awk -v a="$1" -v b="$2" 'BEGIN { split(a, x, "."); split(b, y, ".");
+    for (i = 1; i <= 3; i++) { if (x[i] + 0 > y[i] + 0) exit 0; if (x[i] + 0 < y[i] + 0) exit 1 } exit 0 }'
+}
+
+# Prints why Codex can't be used, or nothing if it can.
+unavailable_reason() {
+  command -v codex >/dev/null 2>&1 || { echo "codex is not installed"; return; }
+  local v
+  v="$(codex --version 2>/dev/null | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
+  [ -n "$v" ] || { echo "cannot read codex version"; return; }
+  version_ge "$v" "$MIN_VERSION" || { echo "codex $v is older than $MIN_VERSION"; return; }
+  codex login status </dev/null >/dev/null 2>&1 || { echo "codex is not logged in (run: codex login)"; return; }
+}
+
+kill_tree() { # pid signal
+  local c
+  for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c" "$2"; done
+  kill "-$2" "$1" 2>/dev/null
+}
+
+stop_codex() {
+  [ -n "$CODEX_PID" ] || return 0
+  kill_tree "$CODEX_PID" TERM; sleep 1; kill_tree "$CODEX_PID" KILL
+  wait "$CODEX_PID" 2>/dev/null; CODEX_PID=""
+}
+
+remove_worktree() { # dir holding the worktree
+  case "$1" in "${TMPDIR:-/tmp}"/alice-codex.*) ;; *) return ;; esac
+  git -C "$REPO" worktree remove --force --force "$1/wt" >/dev/null 2>&1
+  rm -rf "$1"
+  git -C "$REPO" worktree prune >/dev/null 2>&1
+}
+
+cleanup() { stop_codex; [ -n "$TMP" ] && remove_worktree "$TMP"; TMP="" WT=""; }
+
+finish() { # status exit-code message
+  cleanup
+  [ -n "$JOB" ] && printf '%s\n' "$1" > "$JOB/status"
+  [ -n "$3" ] && echo "alice-codex: $1: $3" >&2
+  exit "$2"
+}
+
+trap 'finish failed 4 "interrupted"' INT TERM HUP
+
+# Worktrees and Codex processes left by a launcher killed outright (SIGKILL) are removed on the next work run.
+sweep_stale() {
+  local p d c
+  git -C "$REPO" worktree list --porcelain | sed -n 's/^worktree //p' | while IFS= read -r p; do
+    d="$(dirname "$p")"
+    case "$d" in "${TMPDIR:-/tmp}"/alice-codex.*) ;; *) continue ;; esac
+    kill -0 "$(cat "$d/pid" 2>/dev/null || echo 0)" 2>/dev/null && continue
+    c="$(cat "$d/codex.pid" 2>/dev/null)"
+    [ -n "$c" ] && ps -p "$c" -o args= 2>/dev/null | grep -q codex && kill_tree "$c" KILL
+    remove_worktree "$d"
+  done
+}
+
+run_codex() { # cwd sandbox; returns codex's exit code, 124 on timeout
+  local args=(exec --json --ephemeral --color never -s "$2" -C "$1" -o "$JOB/result.md") waited=0 rc
+  [ -n "${ALICE_CODEX_MODEL:-}" ] && args+=(-m "$ALICE_CODEX_MODEL")
+  git -C "$1" rev-parse --git-dir >/dev/null 2>&1 || args+=(--skip-git-repo-check)
+  codex "${args[@]}" - < "$JOB/prompt.md" > "$JOB/events.jsonl" 2> "$JOB/stderr.log" &
+  CODEX_PID=$!
+  [ -n "$TMP" ] && echo "$CODEX_PID" > "$TMP/codex.pid"
+  while kill -0 "$CODEX_PID" 2>/dev/null; do
+    [ "$waited" -ge "$TIMEOUT" ] && { stop_codex; return 124; }
+    sleep 1; waited=$((waited + 1))
+  done
+  wait "$CODEX_PID"; rc=$?; CODEX_PID=""
+  return "$rc"
+}
+
+classify() { # codex exit code
+  local rc="$1" failed=no
+  [ "$rc" -eq 124 ] && finish timeout 5 "no result after ${TIMEOUT}s"
+  grep -q '"type":"turn.failed"' "$JOB/events.jsonl" && failed=yes
+  if [ "$rc" -ne 0 ] || [ "$failed" = yes ]; then
+    if { cat "$JOB/stderr.log"; grep -E '"type":"(error|turn\.failed)"' "$JOB/events.jsonl"; } 2>/dev/null \
+       | grep -qiE 'usage limit|usageLimitExceeded'; then
+      finish quota 4 "usage limit reached"
+    fi
+    finish failed 4 "codex exited $rc; see $JOB/stderr.log"
+  fi
+  [ -s "$JOB/result.md" ] || finish failed 4 "codex gave no final message; see $JOB/stderr.log"
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  check)
+    r="$(unavailable_reason)"
+    [ -z "$r" ] && { codex --version; exit 0; }
+    echo "unavailable: $r"; exit 3 ;;
+  review|work)
+    [ -n "${1:-}" ] || usage
+    [ -s "$1/prompt.md" ] || { echo "alice-codex: missing $1/prompt.md" >&2; exit 2; }
+    JOB="$(cd "$1" && pwd)"
+    rm -f "$JOB/status" "$JOB/result.md" "$JOB/changes.patch" "$JOB/base"
+    r="$(unavailable_reason)"; [ -z "$r" ] || finish unavailable 3 "$r" ;;
+  *) usage ;;
+esac
+
+if [ "$cmd" = review ]; then
+  run_codex "${2:-$PWD}" read-only; classify $?
+  finish ok 0 ""
+fi
+
+[ -n "${2:-}" ] || usage
+REPO="$(git -C "$2" rev-parse --show-toplevel 2>/dev/null)" || finish failed 4 "work needs a git repository; use review instead"
+git -C "$REPO" rev-parse --verify -q HEAD >/dev/null || finish failed 4 "work needs at least one commit"
+sweep_stale
+BASE="$(git -C "$REPO" stash create 2>/dev/null)"; [ -n "$BASE" ] || BASE="$(git -C "$REPO" rev-parse HEAD)"
+echo "$BASE" > "$JOB/base"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/alice-codex.XXXXXX")" || { TMP=""; finish failed 4 "cannot create temp dir"; }
+echo $$ > "$TMP/pid"
+WT="$TMP/wt"
+git -C "$REPO" worktree add -q --detach "$WT" "$BASE" 2>"$JOB/stderr.log" || finish failed 4 "cannot create worktree"
+run_codex "$WT" workspace-write; classify $?
+if ! { git -C "$WT" add -A && git -C "$WT" diff --cached --binary "$BASE" -- . ':(exclude).work' > "$JOB/changes.patch"; }; then
+  finish failed 4 "cannot collect changes"
+fi
+finish ok 0 ""

@@ -1,1 +1,2 @@
 - Skeleton: forked alice-skills 0.3.6 as `alice-orchestrate` 0.1.0 (metadata and README install lines renamed, skills and hooks unchanged); `claude plugin validate .` passes (icon warning only).
+- Codex launcher `bin/alice-codex` (check / review / work): stub-tested ok, fail, quota, false-quota, timeout, not logged in, missing, interrupt, SIGKILL+sweep; real Codex review found planted bug, real work run returned an applying patch; no worktree/branch/process left.
