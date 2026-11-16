@@ -89,12 +89,7 @@ Kimin için: kendin ve plugin'i kuracak diğer alice-skills kullanıcıları. B�
 - **Sürüm ve referans:** Hedef sürüm `codex-cli` ≥ 0.159. `codex-plugin-cc`'den (Apache-2.0) alınan bir şey olursa kaynak belirtilir.
 
 ## Route
-1. **Launcher:** `work` işi `changed.txt` ve `flags.txt` yazar; brief'teki kapsam varsa ona göre işaretler. Sahte Codex ile test edilir.
-2. **Skill metinleri:**
-   - `step`: inceleyici seçimi, inceleme kuralları, devretme şartları, brief alanları, journal satırı.
-   - `ask-alice` ve README güncellenir.
-   - "Farklı model farklı şeyleri kaçırır" iddiası yumuşatılır.
-3. **MILESTONE:** Headless uçtan uca deneme. Gözlenecekler:
+1. **MILESTONE:** Headless uçtan uca deneme. Gözlenecekler:
    - Claude'un yazdığı diff'i Codex inceliyor mu?
    - Milestone'da iki inceleyici çalışıyor mu?
    - Bulgular doğrulanıyor mu?

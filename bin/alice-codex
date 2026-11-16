@@ -6,6 +6,10 @@
 #   alice-codex work   <job-dir> <repo-dir>   prompt in <job-dir>/prompt.md; runs in a temporary
 #                                             git worktree, leaves <job-dir>/changes.patch
 #
+# For work, an optional <job-dir>/scope.txt lists the paths the task may change, one per line
+# (globs like src/*.py, or directories ending in /). changed.txt lists changed paths with git's
+# status letter; flags.txt lists changes to look at closely: tests, CI, and paths outside scope.
+#
 # Results in <job-dir>: result.md (Codex's final message), status (ok|unavailable|failed|timeout|quota),
 # events.jsonl, stderr.log; for work also base (commit the patch is against; uncommitted tracked
 # changes included, untracked files not). The worktree and every Codex process are gone on return,
@@ -18,7 +22,7 @@ MIN_VERSION="0.159.0"
 TIMEOUT="${ALICE_CODEX_TIMEOUT:-900}"
 JOB="" REPO="" TMP="" WT="" CODEX_PID=""
 
-usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
+usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2; }
 
 version_ge() { # a b: is a >= b
   awk -v a="$1" -v b="$2" 'BEGIN { split(a, x, "."); split(b, y, ".");
@@ -119,6 +123,37 @@ classify() { # codex exit code
   [ -s "$JOB/result.md" ] || finish failed 4 "codex gave no final message; see $JOB/stderr.log"
 }
 
+in_scope() { # path; true when there is no scope.txt or a line matches
+  [ -s "$JOB/scope.txt" ] || return 0
+  local pat
+  while IFS= read -r pat || [ -n "$pat" ]; do
+    [ -n "$pat" ] || continue
+    case "$pat" in */) case "$1" in "$pat"*) return 0 ;; esac ;; esac
+    # shellcheck disable=SC2254
+    case "$1" in $pat) return 0 ;; esac
+  done < "$JOB/scope.txt"
+  return 1
+}
+
+flag_changes() { # reads git --name-status lines, prints "<reason>: <path>"
+  local st path base
+  while IFS=$'\t' read -r st path; do
+    base="${path##*/}"
+    case "/$path" in
+      */test/*|*/tests/*|*/__tests__/*|*/spec/*|*/testdata/*) echo "test: $path" ;;
+      *) case "$base" in
+           test_*|*_test.*|*.test.*|*.spec.*|*Test.*|*Tests.*|conftest.py) echo "test: $path" ;;
+         esac ;;
+    esac
+    case "$path" in
+      .github/*|.gitlab-ci.yml|.circleci/*|Jenkinsfile|.travis.yml|azure-pipelines.yml|.buildkite/*) echo "ci: $path" ;;
+    esac
+    in_scope "$path" || echo "out-of-scope: $path"
+    [ "$st" = D ] && echo "deleted: $path"
+  done
+  return 0
+}
+
 cmd="${1:-}"; shift || true
 case "$cmd" in
   check)
@@ -129,7 +164,7 @@ case "$cmd" in
     [ -n "${1:-}" ] || usage
     [ -s "$1/prompt.md" ] || { echo "alice-codex: missing $1/prompt.md" >&2; exit 2; }
     JOB="$(cd "$1" && pwd)"
-    rm -f "$JOB/status" "$JOB/result.md" "$JOB/changes.patch" "$JOB/base"
+    rm -f "$JOB/status" "$JOB/result.md" "$JOB/changes.patch" "$JOB/base" "$JOB/changed.txt" "$JOB/flags.txt"
     r="$(unavailable_reason)"; [ -z "$r" ] || finish unavailable 3 "$r" ;;
   *) usage ;;
 esac
@@ -153,4 +188,6 @@ run_codex "$WT" workspace-write; classify $?
 if ! { git -C "$WT" add -A && git -C "$WT" diff --cached --binary "$BASE" -- . ':(exclude).work' > "$JOB/changes.patch"; }; then
   finish failed 4 "cannot collect changes"
 fi
+git -C "$WT" diff --cached --name-status --no-renames "$BASE" -- . ':(exclude).work' > "$JOB/changed.txt"
+flag_changes < "$JOB/changed.txt" > "$JOB/flags.txt"
 finish ok 0 ""

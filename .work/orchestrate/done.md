@@ -5,3 +5,5 @@
 - Install check: local marketplace + `--scope local` install lists the skills and puts `bin/` on PATH; test install and marketplace removed afterwards. README covers workers, requirements (codex ≥ 0.159, tested 0.159.2), install and not-both rule. Tagged v0.1.0.
 - Published: public repo aliyusufergin/alice-orchestrate, v0.1.0; install from GitHub verified (skills listed, `bin/` on PATH), test install removed.
 - Final check by Codex: availability checks now bounded (20s); README's cleanup claim matched to behaviour. v0.1.1.
+- 0.2.0 launcher: `work` also writes `changed.txt` and `flags.txt` (test, ci, out-of-scope via optional `scope.txt`, deleted); stub-tested incl. paths with spaces.
+- 0.2.0 skills: reviewer chosen by author, both reviewers at milestones/end, review rules (blind to reasoning, evidence, verify by running, ≤2 rounds), gated delegation, brief fields, journal line per job; ask-alice and README updated.

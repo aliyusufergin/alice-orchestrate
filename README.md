@@ -29,11 +29,13 @@ Before adding a line to a skill, ask whether the model would go wrong without it
 
 ## Workers
 
-Claude stays in charge of the work and its record. When Codex is installed and logged in, Claude can give it:
+Claude stays in charge of the work and its record, and does the writing. When Codex is installed and logged in, Claude can give it:
 
-- **the independent check** at milestones, at the end and at risky steps, since a different model misses different things;
+- **review of Claude's work.** At milestones and at the end, Codex and a fresh Claude subagent review independently. Reviewers see the spec and the diff, not Claude's reasoning; they report findings with evidence and don't rewrite code. Claude confirms each finding by running something before acting on it, and stops after two rounds.
 - **a second opinion** on a decision that would change the outcome;
-- **a well-defined part of a step.** Codex works in a temporary git worktree and returns a patch, which Claude reviews and applies. Your working tree and `.work/` are never written by the worker.
+- **occasionally, a part to write**, only when it is self-contained, checkable by a command, touches files nothing else is touching, and is big enough to be worth the hand-off. Codex works in a temporary git worktree and returns a patch, a list of changed files and flags for changes to tests, CI or files outside the stated scope. Claude reviews it, with a fresh Claude subagent at milestones, applies it and runs the check itself. Your working tree and `.work/` are never written by the worker.
+
+This split follows published evidence on multi-agent coding: independent review pays off, while parallel writers tend to conflict. See `.work/orchestrate/survey-orchestration.md`.
 
 `survey` can also share its reading with Codex. Talking with you (`clarify`, `spec`, `steer`) stays with Claude.
 
