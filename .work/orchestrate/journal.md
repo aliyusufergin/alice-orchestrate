@@ -1,0 +1,1 @@
+- 2026-11-16: Fork baseline commit keeps skill bodies byte-identical to alice-skills 0.3.6, so `git diff <baseline>` shows exactly what orchestration added.

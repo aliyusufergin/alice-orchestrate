@@ -1,0 +1,13 @@
+{
+  "name": "alice-orchestrate",
+  "owner": {
+    "name": "aliyusufergin"
+  },
+  "plugins": [
+    {
+      "name": "alice-orchestrate",
+      "source": "./",
+      "description": "alice-skills with Claude as orchestrator and other models (first: OpenAI Codex) as workers, through official vendor CLIs."
+    }
+  ]
+}

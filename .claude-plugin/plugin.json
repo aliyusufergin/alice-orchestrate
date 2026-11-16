@@ -1,0 +1,9 @@
+{
+  "name": "alice-orchestrate",
+  "version": "0.1.0",
+  "description": "alice-skills with Claude as orchestrator and other models (first: OpenAI Codex) as workers, through official vendor CLIs.",
+  "author": {
+    "name": "aliyusufergin"
+  },
+  "license": "MIT"
+}

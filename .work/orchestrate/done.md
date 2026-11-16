@@ -1,0 +1,1 @@
+- Skeleton: forked alice-skills 0.3.6 as `alice-orchestrate` 0.1.0 (metadata and README install lines renamed, skills and hooks unchanged); `claude plugin validate .` passes (icon warning only).
